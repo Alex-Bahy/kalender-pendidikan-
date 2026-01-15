@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalender Pendidikan SMK Negeri 1 Maluku Tengah 2025/2026</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #093474;
+            --secondary: #005c97;
+            --accent: #fbbf24;
+            --bg: #f1f5f9;
+            --border: #cbd5e1;
+            /* Color Data */
+            --c-m: #ffcdd2; --t-m: #b71c1c;       /* Minggu */
+            --c-lu: #d32f2f; --t-lu: #fff;      /* Libur Umum */
+            --c-mpls: #00bcd4; --t-mpls: #fff;    /* MPLS */
+            --c-psg: #1565c0; --t-psg: #fff;      /* PSG */
+            --c-rs: #7b1fa2; --t-rs: #fff;        /* Raker */
+            --c-anbk: #2e7d32; --t-anbk: #fff;    /* ANBK */
+            --c-lk: #ef6c00; --t-lk: #fff;        /* Libur Khusus */
+            --c-tka: #fbc02d; --t-tka: #333;      /* Tes Akademik */
+            --c-asas: #00e5ff; --t-asas: #004d40; /* ASAS */
+            --c-plhb: #4527a0; --t-plhb: #fff;    /* Terima Rapor */
+            --c-ls: #fff176; --t-ls: #333;        /* Libur Semester */
+            --c-lr: #69f0ae; --t-lr: #003300;     /* Libur Ramadhan */
+            --c-ukk: #424242; --t-ukk: #fff;      /* UKK */
+            --c-asat: #039be5; --t-asat: #fff;    /* ASAT */
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background: var(--bg); margin: 0; padding: 15px; }
+
+        .app-container {
+            max-width: 1450px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        /* --- Header Section --- */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px 35px;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        .header img { width: 85px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+        .header h1 { margin: 0; font-size: 1.7rem; font-weight: 800; }
+        .header p { margin: 5px 0 0; opacity: 0.9; font-size: 0.95rem; }
+
+        /* --- UI Controls --- */
+        .controls {
+            padding: 15px 30px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .tabs { display: flex; gap: 10px; }
+        .tab-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            background: #f8fafc;
+            color: #64748b;
+            transition: 0.2s;
+        }
+        .tab-btn.active { background: var(--primary); color: white; }
+        .btn-print {
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .status-bar {
+            background: #fffbeb;
+            padding: 12px 30px;
+            color: #92400e;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-bottom: 1px solid #fef3c7;
+        }
+
+        /* --- Freeze Pane Table --- */
+        .scroll-wrapper {
+            max-height: 600px;
+            overflow: auto;
+            position: relative;
+        }
+        table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; }
+
+        /* Freeze Header (Horizontal) */
+        thead th {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            z-index: 50;
+            border-bottom: 2px solid var(--border);
+            padding: 12px 0;
+            font-size: 11px;
+        }
+
+        /* Freeze Column (Vertical) */
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            z-index: 60;
+            background: white;
+            width: 140px;
+            min-width: 140px;
+            border-right: 2px solid var(--border);
+            font-weight: 800;
+            color: var(--primary);
+            padding-left: 15px !important;
+            text-align: left;
+        }
+
+        /* Corner Lock */
+        thead th.sticky-col { z-index: 100; background: var(--primary); color: white; }
+
+        td {
+            width: 40px; height: 42px; text-align: center;
+            border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9;
+            font-size: 11px; font-weight: 600; cursor: pointer;
+        }
+
+        td:hover:not(.sticky-col) { background-color: #f1f7ff; outline: 2px solid var(--secondary); outline-offset: -2px; }
+
+        /* Color Coding */
+        .m { background: var(--c-m) !important; color: var(--t-m); }
+        .lu { background: var(--c-lu) !important; color: var(--t-lu); }
+        .mpls { background: var(--c-mpls) !important; color: var(--t-mpls); }
+        .psg { background: var(--c-psg) !important; color: var(--t-psg); }
+        .rs { background: var(--c-rs) !important; color: var(--t-rs); }
+        .anbk { background: var(--c-anbk) !important; color: var(--t-anbk); }
+        .asas { background: var(--c-asas) !important; color: var(--t-asas); }
+        .ls, .las { background: var(--c-ls) !important; color: var(--t-ls); }
+        .asat { background: var(--c-asat) !important; color: var(--t-asat); }
+        .eff-cell { background: #f8fafc; font-weight: 800; color: #1e293b; }
+
+        /* --- Legend --- */
+        .legend-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px; padding: 30px;
+        }
+        .legend-item { display: flex; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; font-size: 0.85rem; }
+        .legend-box { width: 35px; height: 22px; border-radius: 4px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 9px; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header class="header">
+        <img src="https://iili.io/fjX4osn.md.png" alt="Logo">
+        <div>
+            <p>PEMERINTAH PROVINSI MALUKU • SMKN 1 MALUKU TENGAH</p>
+            <h1>KALENDER PENDIDIKAN</h1>
+            <p>Tahun Pelajaran 2025/2026</p>
+        </div>
+    </header>
+
+    <div class="controls">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(event, 'view-calendar')">📅 Jadwal</button>
+            <button class="tab-btn" onclick="switchTab(event, 'view-legend')">📖 Kode Keterangan</button>
+        </div>
+        <button class="btn-print" onclick="downloadPDF()">📥 Simpan PDF</button>
+    </div>
+
+    <div class="status-bar" id="status">
+        ✨ Klik pada sel kalender untuk detail kegiatan.
+    </div>
+
+    <div id="view-calendar" class="tab-content">
+        <div class="scroll-wrapper" id="pdf-area">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="sticky-col">BULAN \ TGL</th>
+                        <script>for(let i=1; i<=31; i++) document.write(`<th>${i}</th>`);</script>
+                        <th style="width: 50px; background: #e2e8f0;">HE</th>
+                    </tr>
+                </thead>
+                <tbody id="calendar-rows"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="view-legend" class="tab-content hidden">
+        <div class="legend-grid" id="legend-list"></div>
+    </div>
+</div>
+
+<script>
+    const fullData = [
+        {m:'JULI 2025', he:7, d:{6:'m', 13:'m', 14:'mpls', 15:'mpls', 16:'mpls', 17:'mpls', 18:'mpls', 19:'mpls', 20:'m', 21:'psg', 22:'psg', 23:'psg', 24:'psg', 25:'psg', 27:'m', 28:'psg', 29:'psg', 30:'rs', 31:'rk'}},
+        {m:'AGUSTUS', he:19, d:{1:'rk', 2:'rk', 3:'m', 4:'anbk', 5:'anbk', 6:'anbk', 7:'anbk', 8:'anbk', 10:'m', 17:'m', 18:'lk', 24:'m', 31:'m'}},
+        {m:'SEPTEMBER', he:21, d:{5:'lu', 7:'m', 14:'m', 21:'m', 28:'m'}},
+        {m:'OKTOBER', he:23, d:{5:'m', 12:'m', 19:'m', 26:'m'}},
+        {m:'NOVEMBER', he:15, d:{2:'m', 3:'tka', 4:'tka', 5:'tka', 6:'tka', 7:'tka', 8:'tka', 9:'m', 16:'m', 23:'m', 30:'m'}},
+        {m:'DESEMBER', he:'-', d:{1:'asas', 2:'asas', 3:'asas', 4:'asas', 5:'asas', 7:'m', 8:'asas', 9:'asas', 14:'m', 17:'rn', 19:'plhb', 21:'m', 25:'lu', 22:'ls', 23:'ls', 24:'ls', 26:'ls', 29:'ls', 30:'ls', 31:'ls'}},
+        {m:'JANUARI 2026', he:19, d:{1:'lu', 2:'ls', 4:'m', 11:'m', 17:'lu', 18:'m', 25:'m'}},
+        {m:'FEBRUARI', he:16, d:{1:'m', 8:'m', 15:'m', 16:'lr', 17:'lu', 22:'m'}},
+        {m:'MARET', he:17, d:{1:'m', 2:'ukk', 3:'ukk', 4:'ukk', 8:'m', 15:'m', 16:'lr', 19:'lu', 20:'lu', 21:'lu', 22:'m', 29:'m'}},
+        {m:'APRIL', he:21, d:{3:'lu', 5:'m', 12:'m', 19:'m', 26:'m'}},
+        {m:'MEI', he:18, d:{1:'lu', 2:'phpn', 3:'m', 10:'m', 14:'lu', 17:'m', 24:'m', 31:'lu'}},
+        {m:'JUNI', he:'-', d:{1:'lu', 2:'asat', 3:'asat', 4:'asat', 5:'asat', 7:'m', 8:'asat', 9:'asat', 17:'lu', 18:'pkk', 21:'m', 22:'plhb', 23:'las', 24:'las', 25:'las', 26:'las', 27:'las', 28:'m', 29:'las', 30:'las'}}
+    ];
+
+    const codes = {
+        m: 'Hari Minggu', lu: 'Libur Nasional', mpls: 'Masa Pengenalan Lingkungan Sekolah',
+        psg: 'Prakerin / PSG', rk: 'Rapat Kerja', anbk: 'Simulasi/Pelaksanaan ANBK',
+        lk: 'Libur Khusus', tka: 'Tes Akademik', asas: 'Asesmen Akhir Semester',
+        rn: 'Rapat Nilai', plhb: 'Pembagian Rapor', ls: 'Libur Semester',
+        lr: 'Libur Ramadhan', ukk: 'Uji Kompetensi Keahlian', phpn: 'Hari Pendidikan Nasional',
+        asat: 'Asesmen Akhir Tahun', las: 'Libur Akhir Semester', pkk: 'Rapat Kenaikan'
+    };
+
+    // Render Table
+    const tableBody = document.getElementById('calendar-rows');
+    fullData.forEach(row => {
+        let tr = `<tr><td class="sticky-col">${row.m}</td>`;
+        for(let i=1; i<=31; i++) {
+            const c = row.d[i] || '';
+            const desc = codes[c] || 'Hari Belajar Efektif';
+            tr += `<td class="${c}" onclick="updateStatus('${row.m} Tgl ${i}', '${desc}')">${c ? c.toUpperCase() : i}</td>`;
+        }
+        tr += `<td class="eff-cell">${row.he}</td></tr>`;
+        tableBody.innerHTML += tr;
+    });
+
+    // Render Legend
+    const legendGrid = document.getElementById('legend-list');
+    Object.entries(codes).forEach(([key, val]) => {
+        legendGrid.innerHTML += `<div class="legend-item"><div class="legend-box ${key}">${key.toUpperCase()}</div>${val}</div>`;
+    });
+
+    function updateStatus(date, msg) {
+        const s = document.getElementById('status');
+        s.innerHTML = `📅 <strong>${date}:</strong> ${msg}`;
+        s.style.background = "#ecfdf5"; s.style.color = "#065f46";
+    }
+
+    function switchTab(e, id) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.remove('hidden');
+        e.currentTarget.classList.add('active');
+    }
+
+    function downloadPDF() {
+        const element = document.getElementById('pdf-area');
+        html2pdf().from(element).set({
+            margin: 0.2, filename: 'Kalender_SMKN1_Malteng_2526.pdf',
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        }).save();
+    }
+</script>
+</body>
+</html>
